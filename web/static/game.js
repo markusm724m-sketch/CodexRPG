@@ -367,6 +367,28 @@ function updateSimulation() {
         n.x = n._baseX + Math.sin(t) * 0.08;
         n.y = n._baseY + Math.cos(t * 1.3) * 0.06;
     });
+
+    // player animation state: moving if has target or non-zero velocity
+    const velX = (playerTarget ? playerTarget.x - playerWorldPos.x : 0);
+    const velY = (playerTarget ? playerTarget.y - playerWorldPos.y : 0);
+    const moving = Math.sqrt(velX*velX + velY*velY) > 0.02;
+    if (moving) {
+        // speed up animation while walking
+        playerAnim.speed = 6;
+    } else {
+        playerAnim.speed = 12;
+    }
+
+    // play footstep sound periodically when walking
+    if (moving) {
+        playerAnim.stepCounter = (playerAnim.stepCounter || 0) + 1;
+        if (playerAnim.stepCounter >= 14) {
+            playerAnim.stepCounter = 0;
+            playFootstepSound();
+        }
+    } else {
+        playerAnim.stepCounter = 0;
+    }
 }
 
 function onCanvasClick(ev) {
@@ -482,6 +504,71 @@ function playClickSound() {
     o.start(); o.stop(audioCtx.currentTime + 0.08);
 }
 
+function playFootstepSound() {
+    if (!audioCtx) return;
+    if (!audioBuffers.footstep) {
+        // create a short low click/pop for footstep
+        const sr = audioCtx.sampleRate; const dur = 0.06; const len = Math.floor(sr*dur);
+        const buf = audioCtx.createBuffer(1, len, sr);
+        const ch = buf.getChannelData(0);
+        for (let i=0;i<len;i++) {
+            const t = i/sr;
+            const env = Math.exp(-10*t);
+            ch[i] = (Math.random()*2-1) * 0.2 * env;
+        }
+        audioBuffers.footstep = buf;
+    }
+    const src = audioCtx.createBufferSource(); src.buffer = audioBuffers.footstep;
+    const g = audioCtx.createGain(); g.gain.value = 0.08; src.connect(g); g.connect(audioCtx.destination);
+    src.start();
+}
+
+function base64ToArrayBuffer(base64) {
+    const binary = atob(base64);
+    const len = binary.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes.buffer;
+}
+
+function generateSineWavBase64(freq=440, duration=0.1, sampleRate=44100) {
+    const sr = sampleRate;
+    const len = Math.floor(sr * duration);
+    const numChannels = 1;
+    const bytesPerSample = 2; // 16-bit
+    const blockAlign = numChannels * bytesPerSample;
+    const byteRate = sr * blockAlign;
+
+    const dataSize = len * blockAlign;
+    const buffer = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(buffer);
+    let offset = 0;
+    function writeString(s) { for (let i=0;i<s.length;i++) view.setUint8(offset++, s.charCodeAt(i)); }
+    writeString('RIFF'); view.setUint32(offset, 36 + dataSize, true); offset += 4; writeString('WAVE');
+    writeString('fmt '); view.setUint32(offset, 16, true); offset += 4; view.setUint16(offset, 1, true); offset += 2; // PCM
+    view.setUint16(offset, numChannels, true); offset += 2; view.setUint32(offset, sr, true); offset += 4; view.setUint32(offset, byteRate, true); offset += 4;
+    view.setUint16(offset, blockAlign, true); offset += 2; view.setUint16(offset, bytesPerSample * 8, true); offset += 2;
+    writeString('data'); view.setUint32(offset, dataSize, true); offset += 4;
+    // samples
+    for (let i=0;i<len;i++) {
+        const t = i / sr;
+        const env = Math.exp(-6 * t);
+        const s = Math.sin(2*Math.PI*freq*t) * env * 0.6;
+        const val = Math.max(-1, Math.min(1, s));
+        view.setInt16(offset, val * 0x7fff, true);
+        offset += 2;
+    }
+
+    // convert to base64
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const chunk = 0x8000;
+    for (let i=0;i<bytes.length;i+=chunk) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunk));
+    }
+    return btoa(binary);
+}
+
 async function loadAssets() {
     // load player/npc sprite sheets if present
     try {
@@ -489,7 +576,7 @@ async function loadAssets() {
         playerSprite.src = '/static/sprites/player.svg';
         npcSprite = new Image();
         npcSprite.src = '/static/sprites/npc.svg';
-        // try load audio click
+        // try load audio click; if missing, decode generated WAV base64
         if (audioCtx) {
             try {
                 const resp = await fetch('/static/sfx/click.wav');
@@ -500,24 +587,29 @@ async function loadAssets() {
             } catch (e) {
                 console.debug('No click.wav available or failed decode', e);
             }
-            // if external file missing, generate a short click buffer programmatically
+
             if (!audioBuffers.click) {
                 try {
-                    const sr = audioCtx.sampleRate;
-                    const dur = 0.08;
-                    const len = Math.floor(sr * dur);
-                    const buf = audioCtx.createBuffer(1, len, sr);
-                    const ch = buf.getChannelData(0);
-                    const freq = 1000;
-                    for (let i = 0; i < len; i++) {
-                        // fast decay sine
-                        const t = i / sr;
-                        const env = Math.exp(-12 * t);
-                        ch[i] = Math.sin(2 * Math.PI * freq * t) * env * 0.6;
-                    }
-                    audioBuffers.click = buf;
+                    // generate a tiny WAV in-memory (sine burst) and decode it so code behaves as if a file was present
+                    const base64 = generateSineWavBase64(1000, 0.08, audioCtx.sampleRate);
+                    const arr = base64ToArrayBuffer(base64);
+                    audioBuffers.click = await audioCtx.decodeAudioData(arr.slice(0));
                 } catch (e) {
-                    console.debug('Failed to synth audio buffer', e);
+                    // fallback to creating raw buffer if decode fails
+                    try {
+                        const sr = audioCtx.sampleRate;
+                        const dur = 0.08;
+                        const len = Math.floor(sr * dur);
+                        const buf = audioCtx.createBuffer(1, len, sr);
+                        const ch = buf.getChannelData(0);
+                        const freq = 1000;
+                        for (let i = 0; i < len; i++) {
+                            const t = i / sr;
+                            const env = Math.exp(-12 * t);
+                            ch[i] = Math.sin(2 * Math.PI * freq * t) * env * 0.6;
+                        }
+                        audioBuffers.click = buf;
+                    } catch (e2) { console.debug('Failed to synth audio buffer', e2); }
                 }
             }
         }
