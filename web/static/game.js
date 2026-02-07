@@ -1,4 +1,8 @@
-const API_URL = 'http://localhost:5000/api';
+// Use current origin so PWA/mobile installs and remote hosts work.
+// Falls back to localhost:5000 for legacy dev setups.
+const API_URL = (typeof window !== 'undefined' && window.location && window.location.origin
+    ? window.location.origin
+    : 'http://localhost:5000') + '/api';
 
 let gameActive = false;
 let currentPlayer = null;
