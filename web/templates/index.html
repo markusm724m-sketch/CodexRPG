@@ -121,10 +121,15 @@
                         </div>
 
                         <!-- World Tab -->
-                        <div id="tab-world" class="tab-content">
-                            <h3>World Map</h3>
-                            <div id="world-map" class="world-map"></div>
-                        </div>
+                            <div id="tab-world" class="tab-content">
+                                <h3>World Map</h3>
+                                <!-- Canvas-based tile map for richer graphics -->
+                                <div class="world-canvas-wrap">
+                                    <canvas id="world-canvas" width="600" height="600"></canvas>
+                                </div>
+                                <!-- Fallback grid (kept for accessibility) -->
+                                <div id="world-map" class="world-map" aria-hidden="true" style="display:none"></div>
+                            </div>
 
                         <!-- NPCs Tab -->
                         <div id="tab-npcs" class="tab-content">

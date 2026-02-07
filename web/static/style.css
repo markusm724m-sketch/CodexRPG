@@ -341,6 +341,14 @@ body {
     gap: 4px;
     margin-top: 15px;
 }
+.world-canvas-wrap { display:flex; justify-content:center; align-items:center; padding:12px; }
+.map-cell { padding: 8px; text-align: center; border-radius:6px; background: #222; color: #fff; }
+
+/* Canvas styles */
+#world-canvas { width:100%; max-width:720px; height:auto; background: linear-gradient(#0f1720, #081018); border-radius:8px; box-shadow: 0 6px 18px rgba(0,0,0,0.6); }
+
+/* Simple sprite animation */
+.player-sprite { transition: transform 0.15s linear; }
 
 .map-cell {
     aspect-ratio: 1;

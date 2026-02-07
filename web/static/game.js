@@ -6,6 +6,7 @@ const API_URL = (typeof window !== 'undefined' && window.location && window.loca
 
 let gameActive = false;
 let currentPlayer = null;
+let canvas, ctx, tileSize = 60, worldGrid = null, animFrame = null;
 
 // On page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -169,29 +170,95 @@ async function loadWorld() {
     try {
         const response = await fetch(`${API_URL}/world/info`);
         const world = await response.json();
-        
-        const mapContainer = document.getElementById('world-map');
-        mapContainer.innerHTML = '';
-        
-        // Biome emoji mapping
-        const biomeEmoji = {
-            'plains': '🟩',
-            'forest': '🟢',
-            'mountain': '⛰️',
-            'lake': '🌊'
-        };
-        
-        world.grid.forEach(row => {
-            row.forEach(biome => {
-                const cell = document.createElement('div');
-                cell.className = `map-cell biome-${biome}`;
-                cell.textContent = biomeEmoji[biome] || '?';
-                mapContainer.appendChild(cell);
-            });
-        });
+
+        // initialize canvas on first load
+        worldGrid = world.grid;
+        initWorldCanvas();
+        drawWorldCanvas();
     } catch (error) {
         console.error('Error loading world:', error);
     }
+}
+
+function initWorldCanvas() {
+    canvas = document.getElementById('world-canvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+
+    // compute tile size based on canvas size and grid
+    const rows = worldGrid.length;
+    const cols = worldGrid[0].length;
+    const size = Math.min(Math.floor(canvas.width / cols), Math.floor(canvas.height / rows));
+    tileSize = size;
+
+    // Start animation loop
+    if (!animFrame) animFrame = requestAnimationFrame(animateCanvas);
+}
+
+function drawWorldCanvas() {
+    if (!ctx || !worldGrid) return;
+    const rows = worldGrid.length;
+    const cols = worldGrid[0].length;
+
+    // clear
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    for (let r=0; r<rows; r++) {
+        for (let c=0; c<cols; c++) {
+            const biome = worldGrid[r][c];
+            const x = c * tileSize;
+            const y = r * tileSize;
+            drawTile(biome, x, y, tileSize);
+        }
+    }
+
+    // draw player sprite roughly at center for demo
+    drawPlayerSprite(Math.floor(cols/2), Math.floor(rows/2));
+}
+
+function drawTile(biome, x, y, size) {
+    // Simple stylized tiles
+    switch (biome) {
+        case 'forest':
+            ctx.fillStyle = '#0b6623';
+            ctx.fillRect(x, y, size, size);
+            // trees
+            ctx.fillStyle = '#0a3';
+            ctx.beginPath(); ctx.moveTo(x+size/2, y+6); ctx.lineTo(x+6, y+size-6); ctx.lineTo(x+size-6, y+size-6); ctx.fill();
+            break;
+        case 'mountain':
+            ctx.fillStyle = '#4b5563'; ctx.fillRect(x,y,size,size);
+            ctx.fillStyle = '#9aa4ad'; ctx.beginPath(); ctx.moveTo(x+6,y+size-6); ctx.lineTo(x+size/2,y+8); ctx.lineTo(x+size-6,y+size-6); ctx.fill();
+            break;
+        case 'lake':
+            ctx.fillStyle = '#083d77'; ctx.fillRect(x,y,size,size);
+            ctx.fillStyle = '#1e90ff'; ctx.fillRect(x+4,y+4,size-8,size-8);
+            break;
+        default:
+            // plains
+            ctx.fillStyle = '#6aa84f'; ctx.fillRect(x,y,size,size);
+            break;
+    }
+    // tile border
+    ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.strokeRect(x+0.5,y+0.5,size-1,size-1);
+}
+
+function drawPlayerSprite(col, row) {
+    if (!ctx) return;
+    const x = col * tileSize + tileSize/2;
+    const y = row * tileSize + tileSize/2;
+
+    // simple circle player
+    ctx.beginPath();
+    ctx.fillStyle = '#ffcc00';
+    ctx.arc(x, y, tileSize*0.28, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = '#8b5a00'; ctx.stroke();
+}
+
+function animateCanvas() {
+    drawWorldCanvas();
+    animFrame = requestAnimationFrame(animateCanvas);
 }
 
 // Load NPCs
