@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodexRPG - Fantasy Sandbox</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>⚔ CodexRPG</h1>
+            <p>Fantasy Isekai Sandbox</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Screen: Character Creation -->
+            <div id="screen-creation" class="screen active">
+                <div class="card">
+                    <h2>Create Your Character</h2>
+                    <div class="form-group">
+                        <label for="player-name">Character Name:</label>
+                        <input type="text" id="player-name" placeholder="Enter name" value="Adventurer">
+                    </div>
+                    <div class="form-group">
+                        <label for="player-class">Select Class:</label>
+                        <select id="player-class">
+                            <option value="warrior">⚔ Warrior - Strong melee fighter</option>
+                            <option value="mage">✨ Mage - Spellcaster</option>
+                            <option value="rogue">🗡 Rogue - Quick assassin</option>
+                            <option value="paladin">✨⚔ Paladin - Holy warrior</option>
+                        </select>
+                    </div>
+                    <div id="class-info" class="class-info"></div>
+                    <button class="btn btn-primary" onclick="createPlayer()">Create Character</button>
+                </div>
+            </div>
+
+            <!-- Screen: Game -->
+            <div id="screen-game" class="screen">
+                <div class="game-grid">
+                    <!-- Left Panel: Player Info -->
+                    <div class="panel panel-left">
+                        <div class="player-card">
+                            <h3 id="player-name-display">Hero</h3>
+                            <p id="player-class-display">Warrior</p>
+                        </div>
+
+                        <div class="stats-panel">
+                            <h4>Stats</h4>
+                            <div class="stat">
+                                <span>HP:</span>
+                                <div class="stat-bar">
+                                    <div id="hp-bar" class="stat-fill"></div>
+                                </div>
+                                <span id="hp-value">100/100</span>
+                            </div>
+                            <div class="stat">
+                                <span>Gold:</span>
+                                <span id="gold-value">0</span>
+                            </div>
+                            <div class="stat">
+                                <span>Damage:</span>
+                                <span id="damage-value">10</span>
+                            </div>
+                            <div class="stat">
+                                <span>Defense:</span>
+                                <span id="defense-value">5</span>
+                            </div>
+                        </div>
+
+                        <div class="skills-panel">
+                            <h4>Skills</h4>
+                            <div id="skills-list" class="skills-list"></div>
+                        </div>
+
+                        <div class="inventory-panel">
+                            <h4>Inventory</h4>
+                            <p id="inventory-count">Items: 0</p>
+                        </div>
+                    </div>
+
+                    <!-- Center Panel: Actions & Info -->
+                    <div class="panel panel-center">
+                        <div class="tabs">
+                            <button class="tab-btn active" onclick="switchTab('actions')">Actions</button>
+                            <button class="tab-btn" onclick="switchTab('world')">World</button>
+                            <button class="tab-btn" onclick="switchTab('npcs')">NPCs</button>
+                            <button class="tab-btn" onclick="switchTab('quests')">Quests</button>
+                            <button class="tab-btn" onclick="switchTab('home')">Home</button>
+                        </div>
+
+                        <!-- Actions Tab -->
+                        <div id="tab-actions" class="tab-content active">
+                            <h3>Available Actions</h3>
+                            <div class="actions-grid">
+                                <button class="action-btn" onclick="playerAction('gather')">
+                                    🌿 Gather Resources
+                                </button>
+                                <button class="action-btn" onclick="playerAction('rest')">
+                                    😴 Rest & Recover
+                                </button>
+                                <button class="action-btn" onclick="playerAction('trigger_event')">
+                                    🎲 Trigger Event
+                                </button>
+                                <button class="action-btn" onclick="switchTab('world')">
+                                    🗺 Explore World
+                                </button>
+                            </div>
+                            <div id="action-result" class="message-box" style="display:none;"></div>
+                        </div>
+
+                        <!-- World Tab -->
+                        <div id="tab-world" class="tab-content">
+                            <h3>World Map</h3>
+                            <div id="world-map" class="world-map"></div>
+                        </div>
+
+                        <!-- NPCs Tab -->
+                        <div id="tab-npcs" class="tab-content">
+                            <h3>NPCs in the World</h3>
+                            <div id="npcs-list" class="npcs-list"></div>
+                        </div>
+
+                        <!-- Quests Tab -->
+                        <div id="tab-quests" class="tab-content">
+                            <h3>Available Quests</h3>
+                            <div id="quests-list" class="quests-list"></div>
+                        </div>
+
+                        <!-- Home Tab -->
+                        <div id="tab-home" class="tab-content">
+                            <h3>Your Homestead</h3>
+                            <div id="home-info" class="home-info"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right Panel: Reputation -->
+                    <div class="panel panel-right">
+                        <div class="reputation-panel">
+                            <h4>Faction Reputation</h4>
+                            <div id="reputation-list" class="reputation-list"></div>
+                        </div>
+
+                        <div class="events-panel">
+                            <h4>Recent Events</h4>
+                            <div id="events-log" class="events-log"></div>
+                        </div>
+
+                        <button class="btn btn-secondary" onclick="resetGame()">New Character</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/game.js"></script>
+</body>
+</html>
