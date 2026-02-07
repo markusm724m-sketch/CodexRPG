@@ -162,6 +162,15 @@
                             <div id="events-log" class="events-log"></div>
                         </div>
 
+                        <div class="debug-panel">
+                            <h4>Debug / Audio</h4>
+                            <label><input type="checkbox" id="debug-path-toggle" onchange="toggleDebugPath(this.checked)"> Show NPC paths</label>
+                            <div style="margin-top:8px">
+                                <label for="sound-volume">Sound Volume</label>
+                                <input id="sound-volume" type="range" min="0" max="1" step="0.01" value="0.9" onchange="setSoundVolume(this.value)">
+                            </div>
+                        </div>
+
                         <button class="btn btn-secondary" onclick="resetGame()">New Character</button>
                     </div>
                 </div>

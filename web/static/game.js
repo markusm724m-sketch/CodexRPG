@@ -16,6 +16,8 @@ let npcs = [];
 let particles = [];
 // Audio
 let audioCtx = null;
+let soundVolume = 0.9;
+let debugDrawPaths = false;
 
 // Sprite & animation
 let playerSprite = null;
@@ -232,6 +234,9 @@ function initWorldCanvas() {
 
     // load sprite and audio assets (non-blocking)
     loadAssets();
+
+    // expose initial UI values
+    try { document.getElementById('sound-volume').value = soundVolume; } catch(e){}
 }
 
 function drawWorldCanvas() {
@@ -432,6 +437,17 @@ function onCanvasClick(ev) {
     // play click sound and spawn small feedback particles
     playClickSound();
     spawnParticles(worldX, worldY, 6);
+
+    // if clicked on an NPC, attempt interaction: compute path avoiding impassable tiles
+    const clickedTile = { x: Math.floor(worldX + 0.5), y: Math.floor(worldY + 0.5) };
+    const npc = npcs.find(n => Math.round(n.x) === clickedTile.x && Math.round(n.y) === clickedTile.y);
+    if (npc) {
+        // compute path to NPC and set player target to first step
+        const p = findPath({x: Math.round(playerWorldPos.x), y: Math.round(playerWorldPos.y)}, {x: Math.round(npc.x), y: Math.round(npc.y)});
+        if (p && p.length>0) {
+            playerTarget = p[p.length-1];
+        }
+    }
 }
 
 function onKeyDown(ev) {
@@ -503,6 +519,25 @@ function drawNPCs() {
         ctx.fillStyle = '#3e2723';
         ctx.fillText(npc.name[0] || 'N', x-4, y+6);
     });
+
+    // draw debug paths if enabled
+    if (debugDrawPaths) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,0,0,0.8)';
+        ctx.lineWidth = 2;
+        npcs.forEach(n => {
+            if (n.path && n.path.length) {
+                ctx.beginPath();
+                n.path.forEach((pt, idx) => {
+                    const x = pt.x * tileSize + tileSize/2 - camera.x;
+                    const y = pt.y * tileSize + tileSize/2 - camera.y;
+                    if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+            }
+        });
+        ctx.restore();
+    }
 }
 
 function playClickSound() {
@@ -516,7 +551,7 @@ function playClickSound() {
     if (audioBuffers.click) {
         const src = audioCtx.createBufferSource();
         src.buffer = audioBuffers.click;
-        const g = audioCtx.createGain(); g.gain.value = 0.12;
+        const g = audioCtx.createGain(); g.gain.value = 0.12 * soundVolume;
         src.connect(g); g.connect(audioCtx.destination);
         src.start();
         return;
@@ -526,7 +561,7 @@ function playClickSound() {
     const o = audioCtx.createOscillator();
     const g = audioCtx.createGain();
     o.type = 'sine'; o.frequency.setValueAtTime(800, audioCtx.currentTime);
-    g.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    g.gain.setValueAtTime(0.08 * soundVolume, audioCtx.currentTime);
     o.connect(g); g.connect(audioCtx.destination);
     o.start(); o.stop(audioCtx.currentTime + 0.08);
 }
@@ -546,7 +581,7 @@ function playFootstepSound() {
         audioBuffers.footstep = buf;
     }
     const src = audioCtx.createBufferSource(); src.buffer = audioBuffers.footstep;
-    const g = audioCtx.createGain(); g.gain.value = 0.08; src.connect(g); g.connect(audioCtx.destination);
+    const g = audioCtx.createGain(); g.gain.value = 0.08 * soundVolume; src.connect(g); g.connect(audioCtx.destination);
     src.start();
 }
 
@@ -658,7 +693,9 @@ function findPath(start, goal) {
         for (const o of offs) {
             const np = { x: p.x + o.x, y: p.y + o.y };
             if (!inBounds(np)) continue;
-            // treat all tiles as walkable for now; could add terrain checks
+            // terrain passability: block lakes and mountains
+            const biome = worldGrid[np.y][np.x];
+            if (biome === 'lake' || biome === 'mountain') continue;
             out.push(np);
         }
         return out;
@@ -749,14 +786,16 @@ async function loadNPCs() {
             `;
             npcsList.appendChild(npcCard);
         });
-        // populate in-world NPCs with positions (near center)
-        npcs = data.npcs.map((n, idx) => ({
+            // populate in-world NPCs with positions (near center)
+            npcs = data.npcs.map((n, idx) => ({
             id: n.id || idx,
             name: n.name,
             role: n.role,
             x: Math.floor(worldGrid[0].length/2 + (idx%3) - 1),
             y: Math.floor(worldGrid.length/2 + Math.floor(idx/3) - 1)
         }));
+            // clear paths
+            npcs.forEach(n => { n.path = null; n.pathIndex = 0; });
     } catch (error) {
         console.error('Error loading NPCs:', error);
     }
