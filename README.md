@@ -12,6 +12,19 @@ cd web && python app.py
 # Open: http://localhost:5000
 ```
 
+### Run with Docker (recommended for quick setup)
+
+If you have Docker and docker-compose installed, you can run the whole app in a container:
+
+```bash
+# build and start (maps port 5000)
+docker compose up --build
+
+# then open http://localhost:5000
+```
+
+This uses the provided `Dockerfile` and `docker-compose.yml` to build a lightweight container and run the Flask server. The project folder is mounted into the container for live edits during development.
+
 **Play on Mobile:**
 1. Find your PC IP (Windows: `ipconfig` / Mac/Linux: `ifconfig`)
 2. On phone: Open `http://192.168.x.x:5000` in Chrome/Safari
