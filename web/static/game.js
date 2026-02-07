@@ -23,7 +23,8 @@ let debugDrawPaths = false;
 let playerSprite = null;
 let npcSprite = null;
 let spritesLoaded = false;
-let playerAnim = { counter: 0, speed: 8, frames: 4 };
+// framesX = columns, framesY = rows (directions)
+let playerAnim = { counter: 0, speed: 8, framesX: 4, framesY: 4, dir: 0 };
 let npcAnim = { counter: 0, speed: 12, frames: 4 };
 // Audio buffers
 let audioBuffers = {};
@@ -264,8 +265,27 @@ function drawWorldCanvas() {
     // draw particles
     drawParticles();
 
+    // light halo around player
+    drawPlayerLight(playerWorldPos.x, playerWorldPos.y);
+
     // draw player at world position
     drawPlayerSprite(playerWorldPos.x, playerWorldPos.y);
+}
+
+function drawPlayerLight(col, row) {
+    if (!ctx) return;
+    const cx = col * tileSize + tileSize/2 - camera.x;
+    const cy = row * tileSize + tileSize/2 - camera.y;
+    const radius = tileSize * 2.2;
+    const grad = ctx.createRadialGradient(cx, cy, radius*0.2, cx, cy, radius);
+    grad.addColorStop(0, 'rgba(255,220,150,0.18)');
+    grad.addColorStop(0.4, 'rgba(255,210,140,0.08)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
 }
 
 function drawParallaxBackground() {
@@ -345,14 +365,29 @@ function drawPlayerSprite(col, row) {
     const centerX = col * tileSize + tileSize/2 - camera.x;
     const centerY = row * tileSize + tileSize/2 - camera.y;
 
-    // if sprite loaded, draw animated frame
+    // compute facing direction from velocity/target
+    let vx = 0, vy = 0;
+    if (playerTarget) { vx = playerTarget.x - playerWorldPos.x; vy = playerTarget.y - playerWorldPos.y; }
+    const ang = Math.atan2(vy, vx);
+    // map angle to 0:down,1:left,2:right,3:up
+    if (Math.abs(vx) < 0.01 && Math.abs(vy) < 0.01) {
+        // keep previous direction
+    } else {
+        if (Math.abs(vx) > Math.abs(vy)) {
+            playerAnim.dir = vx > 0 ? 2 : 1;
+        } else {
+            playerAnim.dir = vy > 0 ? 0 : 3;
+        }
+    }
+
+    // if sprite sheet loaded, draw animated frame from row
     if (playerSprite && playerSprite.complete && playerSprite.naturalWidth) {
         playerAnim.counter++;
-        const frame = Math.floor(playerAnim.counter / playerAnim.speed) % playerAnim.frames;
-        const frameW = playerSprite.naturalWidth / playerAnim.frames;
-        const frameH = playerSprite.naturalHeight;
+        const frame = Math.floor(playerAnim.counter / playerAnim.speed) % playerAnim.framesX;
+        const frameW = playerSprite.naturalWidth / playerAnim.framesX;
+        const frameH = playerSprite.naturalHeight / playerAnim.framesY;
         const sx = frame * frameW;
-        const sy = 0;
+        const sy = playerAnim.dir * frameH;
         const dw = tileSize * 0.9;
         const dh = tileSize * 0.9;
         ctx.drawImage(playerSprite, sx, sy, frameW, frameH, centerX - dw/2, centerY - dh/2, dw, dh);
@@ -764,10 +799,10 @@ function pickNearbyTile(cx, cy, radius) {
 async function loadAssets() {
     // load player/npc sprite sheets if present
     try {
-        playerSprite = new Image();
-        playerSprite.src = '/static/sprites/player.svg';
-        npcSprite = new Image();
-        npcSprite.src = '/static/sprites/npc.svg';
+            playerSprite = new Image();
+            playerSprite.src = '/static/sprites/player_dir.svg';
+            npcSprite = new Image();
+            npcSprite.src = '/static/sprites/npc_dir.svg';
         // try load audio click; if missing, decode generated WAV base64
         if (audioCtx) {
             try {

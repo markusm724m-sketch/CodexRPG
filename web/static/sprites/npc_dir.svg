@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- 4x4 NPC placeholder -->
+  <g id="down">
+    <rect x="0" y="0" width="64" height="64" fill="#d1c4e9"/>
+    <rect x="64" y="0" width="64" height="64" fill="#c6a7e8"/>
+    <rect x="128" y="0" width="64" height="64" fill="#b388ff"/>
+    <rect x="192" y="0" width="64" height="64" fill="#9575cd"/>
+  </g>
+  <g id="left">
+    <rect x="0" y="64" width="64" height="64" fill="#e1cff7"/>
+    <rect x="64" y="64" width="64" height="64" fill="#d8bff6"/>
+    <rect x="128" y="64" width="64" height="64" fill="#c99ef2"/>
+    <rect x="192" y="64" width="64" height="64" fill="#b07be8"/>
+  </g>
+  <g id="right">
+    <rect x="0" y="128" width="64" height="64" fill="#c2b3f0"/>
+    <rect x="64" y="128" width="64" height="64" fill="#b39be8"/>
+    <rect x="128" y="128" width="64" height="64" fill="#a07be0"/>
+    <rect x="192" y="128" width="64" height="64" fill="#8a5bd6"/>
+  </g>
+  <g id="up">
+    <rect x="0" y="192" width="64" height="64" fill="#d9c6f8"/>
+    <rect x="64" y="192" width="64" height="64" fill="#cdb6f6"/>
+    <rect x="128" y="192" width="64" height="64" fill="#c0a5f2"/>
+    <rect x="192" y="192" width="64" height="64" fill="#b093ee"/>
+  </g>
+</svg>

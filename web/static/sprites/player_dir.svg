@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- 4x4 frames: 4 columns (frames) x 4 rows (directions: down, left, right, up) -->
+  <!-- Row 0: down -->
+  <g id="down">
+    <rect x="0" y="0" width="64" height="64" fill="#ffd54f"/>
+    <rect x="64" y="0" width="64" height="64" fill="#ffb74d"/>
+    <rect x="128" y="0" width="64" height="64" fill="#ffb300"/>
+    <rect x="192" y="0" width="64" height="64" fill="#ffcc66"/>
+  </g>
+  <!-- Row 1: left -->
+  <g id="left">
+    <rect x="0" y="64" width="64" height="64" fill="#ffe0a3"/>
+    <rect x="64" y="64" width="64" height="64" fill="#ffd180"/>
+    <rect x="128" y="64" width="64" height="64" fill="#ffc04a"/>
+    <rect x="192" y="64" width="64" height="64" fill="#ffcc88"/>
+  </g>
+  <!-- Row 2: right -->
+  <g id="right">
+    <rect x="0" y="128" width="64" height="64" fill="#ffb347"/>
+    <rect x="64" y="128" width="64" height="64" fill="#ffa000"/>
+    <rect x="128" y="128" width="64" height="64" fill="#ff8c00"/>
+    <rect x="192" y="128" width="64" height="64" fill="#ff9f33"/>
+  </g>
+  <!-- Row 3: up -->
+  <g id="up">
+    <rect x="0" y="192" width="64" height="64" fill="#ffd35f"/>
+    <rect x="64" y="192" width="64" height="64" fill="#ffb84d"/>
+    <rect x="128" y="192" width="64" height="64" fill="#ffb36b"/>
+    <rect x="192" y="192" width="64" height="64" fill="#ffd98a"/>
+  </g>
+</svg>
