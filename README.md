@@ -95,6 +95,22 @@ export PYTHONPATH=src
 pytest -v
 ```
 
+## ⚙️ Makefile (quick dev commands)
+
+If you prefer `make`, there is a `Makefile` with common commands:
+
+```bash
+make install      # create venv and install requirements
+make test         # run unit tests
+make run          # run web server
+make docker-up    # run docker-compose
+```
+
+## 🧰 Dev Container / Codespaces
+
+Open this repository in GitHub Codespaces or VS Code Remote — a `.devcontainer` is provided to build a development container with port `5000` forwarded and common extensions installed.
+
+
 ✅ **Result: 23/23 tests pass**
 
 ## 📖 Documentation
