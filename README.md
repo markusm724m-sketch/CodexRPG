@@ -3,23 +3,23 @@ Fantasy Isekai RPG Sandbox Game
 
 ## 🚀 Quick Start
 
-### Option 1: Web Interface (Recommended) ⭐
+### Option 1: Web Interface (PC & Mobile) ⭐
 
-The easiest way to play!
-
-1. **Install dependencies:**
+**Play on PC:**
 ```bash
 pip install -r requirements.txt
+cd web && python app.py
+# Open: http://localhost:5000
 ```
 
-2. **Run the Flask server:**
-```bash
-cd web
-python app.py
-```
+**Play on Mobile:**
+1. Find your PC IP (Windows: `ipconfig` / Mac/Linux: `ifconfig`)
+2. On phone: Open `http://192.168.x.x:5000` in Chrome/Safari
+3. Tap menu → "Install app" 
+4. Works offline! ✓
 
-3. **Open in browser:**
-Visit `http://localhost:5000` and start playing!
+**Build Native APK:**
+See [MOBILE.md](MOBILE.md) for Android APK guide
 
 ### Option 2: CLI Commands
 
@@ -86,6 +86,8 @@ pytest -v
 
 ## 📖 Documentation
 
+- `SETUP.md` - Detailed installation guide
+- `MOBILE.md` - Mobile & APK build guide ⭐
 - `docs/CONTRIBUTING.md` - How to contribute
 - `docs/ROADMAP.md` - Development plans
 
@@ -93,8 +95,26 @@ pytest -v
 
 - **Backend**: Python 3.10+, Flask
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
+- **Mobile**: Progressive Web App (PWA) - Offline support
+- **APK**: Kivy, Buildozer (optional)
 - **Database**: In-memory (session-based)
 - **Testing**: pytest
+
+## 📱 Multi-Platform Support
+
+| Platform | Support | Status |
+|----------|---------|--------|
+| **Windows PC** | Direct | ✅ Working |
+| **Mac/Linux PC** | Direct | ✅ Working |
+| **Android Browser** | PWA | ✅ Working |
+| **iOS Safari** | PWA | ✅ Working |
+| **Android APK** | Native app | 📖 Guide available |
+
+**PWA Features (Progressive Web App):**
+- ✅ Install to home screen
+- ✅ Works offline
+- ✅ Fast loading
+- ✅ No app store needed
 
 ## 🌟 Game Systems
 

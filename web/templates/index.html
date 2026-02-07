@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#ff8c00">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CodexRPG">
+    <meta name="description" content="A fantasy isekai RPG sandbox game - play anywhere!">
     <title>CodexRPG - Fantasy Sandbox</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23ff8c00' width='100' height='100'/><text x='50' y='75' font-size='70' font-weight='bold' text-anchor='middle' fill='white'>⚔</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%23ff8c00' width='180' height='180' rx='40'/><text x='90' y='140' font-size='100' font-weight='bold' text-anchor='middle' fill='white'>⚔</text></svg>">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -157,5 +165,21 @@
     </div>
 
     <script src="/static/game.js"></script>
+    <script>
+        // Register Service Worker for offline support and PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/service-worker.js')
+                .then(reg => console.log('✓ Service Worker registered'))
+                .catch(err => console.log('Service Worker registration failed:', err));
+        }
+
+        // Detect if running as PWA
+        window.isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+                       window.navigator.standalone === true;
+
+        if (isPWA) {
+            document.body.classList.add('pwa-mode');
+        }
+    </script>
 </body>
 </html>

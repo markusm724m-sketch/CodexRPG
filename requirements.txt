@@ -1,3 +1,7 @@
 pytest
 flask
 flask-cors
+# Mobile support (optional)
+# Uncomment to build Android APK:
+# kivy>=2.2.0
+# buildozer>=1.4.0
