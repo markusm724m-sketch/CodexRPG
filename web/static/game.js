@@ -244,8 +244,9 @@ function drawWorldCanvas() {
     const rows = worldGrid.length;
     const cols = worldGrid[0].length;
 
-    // clear
+    // clear and draw parallax background
     ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawParallaxBackground();
 
     // draw tiles relative to camera
     for (let r=0; r<rows; r++) {
@@ -267,31 +268,76 @@ function drawWorldCanvas() {
     drawPlayerSprite(playerWorldPos.x, playerWorldPos.y);
 }
 
-function drawTile(biome, x, y, size) {
-    // Simple stylized tiles
-    switch (biome) {
-        case 'forest':
-            ctx.fillStyle = '#0b6623';
-            ctx.fillRect(x, y, size, size);
-            // trees
-            ctx.fillStyle = '#0a3';
-            ctx.beginPath(); ctx.moveTo(x+size/2, y+6); ctx.lineTo(x+6, y+size-6); ctx.lineTo(x+size-6, y+size-6); ctx.fill();
-            break;
-        case 'mountain':
-            ctx.fillStyle = '#4b5563'; ctx.fillRect(x,y,size,size);
-            ctx.fillStyle = '#9aa4ad'; ctx.beginPath(); ctx.moveTo(x+6,y+size-6); ctx.lineTo(x+size/2,y+8); ctx.lineTo(x+size-6,y+size-6); ctx.fill();
-            break;
-        case 'lake':
-            ctx.fillStyle = '#083d77'; ctx.fillRect(x,y,size,size);
-            ctx.fillStyle = '#1e90ff'; ctx.fillRect(x+4,y+4,size-8,size-8);
-            break;
-        default:
-            // plains
-            ctx.fillStyle = '#6aa84f'; ctx.fillRect(x,y,size,size);
-            break;
+function drawParallaxBackground() {
+    if (!ctx || !canvas) return;
+    const w = canvas.width, h = canvas.height;
+    // sky gradient
+    const sky = ctx.createLinearGradient(0, 0, 0, h*0.6);
+    sky.addColorStop(0, '#071422');
+    sky.addColorStop(1, '#04202a');
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h*0.6);
+
+    // distant hills layers
+    const t = performance.now() * 0.00012;
+    ctx.save();
+    ctx.translate(-((camera.x||0) * 0.05), -((camera.y||0) * 0.02));
+    drawHill('#052a2e', 0.20, h*0.65, 0.15);
+    drawHill('#08343a', 0.40, h*0.72, 0.12);
+    drawHill('#0b3b3f', 0.65, h*0.82, 0.08);
+    ctx.restore();
+
+    function drawHill(color, offsetFactor, baseY, waveY) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(0, h);
+        for (let x=0;x<=w;x+=20) {
+            const nx = x/w;
+            const y = baseY + Math.sin(nx * Math.PI * 2 + t + offsetFactor) * (waveY*30);
+            ctx.lineTo(x, y);
+        }
+        ctx.lineTo(w,h);
+        ctx.closePath();
+        ctx.fill();
     }
-    // tile border
-    ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.strokeRect(x+0.5,y+0.5,size-1,size-1);
+}
+
+function drawTile(biome, x, y, size) {
+    // Modern stylized tiles with gradient and soft shading
+    const pad = 1;
+    const gx = x + pad, gy = y + pad, gs = size - pad*2;
+    switch (biome) {
+        case 'forest': {
+            const g = ctx.createLinearGradient(gx, gy, gx, gy+gs);
+            g.addColorStop(0, '#1b8b3a'); g.addColorStop(1, '#0f5e24');
+            ctx.fillStyle = g; ctx.fillRect(gx, gy, gs, gs);
+            // soft canopy shapes
+            ctx.fillStyle = 'rgba(12,60,20,0.12)';
+            ctx.beginPath(); ctx.ellipse(gx+gs*0.35, gy+gs*0.35, gs*0.28, gs*0.22, 0, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(gx+gs*0.65, gy+gs*0.55, gs*0.3, gs*0.22, 0, 0, Math.PI*2); ctx.fill();
+            break; }
+        case 'mountain': {
+            const g = ctx.createLinearGradient(gx, gy, gx, gy+gs);
+            g.addColorStop(0, '#8d99a6'); g.addColorStop(1, '#596069');
+            ctx.fillStyle = g; ctx.fillRect(gx, gy, gs, gs);
+            // peak highlight
+            ctx.fillStyle = '#cfd6dc'; ctx.beginPath(); ctx.moveTo(gx+gs*0.15, gy+gs*0.78); ctx.lineTo(gx+gs*0.5, gy+gs*0.12); ctx.lineTo(gx+gs*0.85, gy+gs*0.78); ctx.closePath(); ctx.fill();
+            break; }
+        case 'lake': {
+            const g = ctx.createLinearGradient(gx, gy, gx, gy+gs);
+            g.addColorStop(0, '#0b3b66'); g.addColorStop(1, '#063052');
+            ctx.fillStyle = g; ctx.fillRect(gx, gy, gs, gs);
+            // inner shimmer
+            ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fillRect(gx+gs*0.08, gy+gs*0.12, gs*0.84, gs*0.6);
+            break; }
+        default: {
+            const g = ctx.createLinearGradient(gx, gy, gx, gy+gs);
+            g.addColorStop(0, '#b9e6a3'); g.addColorStop(1, '#73c058');
+            ctx.fillStyle = g; ctx.fillRect(gx, gy, gs, gs);
+            break; }
+    }
+    // subtle border and inner shadow
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 1; ctx.strokeRect(gx+0.5, gy+0.5, gs-1, gs-1);
+    ctx.fillStyle = 'rgba(0,0,0,0.04)'; ctx.fillRect(gx, gy+gs-6, gs, 6);
 }
 
 function drawPlayerSprite(col, row) {

@@ -14,9 +14,9 @@
 }
 
 body {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    color: #e0e0e0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: radial-gradient(circle at 10% 10%, #0b1220 0%, #07101a 40%, #041018 100%);
+    color: #eaeef6;
+    font-family: Inter, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     min-height: 100vh;
     padding: 20px;
 }
@@ -35,9 +35,9 @@ body {
 }
 
 .header h1 {
-    font-size: 48px;
+    font-size: 44px;
     color: var(--accent);
-    text-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
+    text-shadow: 0 6px 24px rgba(0,0,0,0.6), 0 0 18px rgba(255,140,0,0.18);
     margin-bottom: 5px;
 }
 
@@ -74,12 +74,12 @@ body {
 }
 
 .card {
-    background: rgba(30, 30, 40, 0.95);
-    border: 2px solid var(--accent);
-    border-radius: 10px;
-    padding: 40px;
-    max-width: 500px;
-    box-shadow: 0 0 20px rgba(255, 140, 0, 0.3);
+    background: linear-gradient(180deg, rgba(25,28,34,0.9), rgba(18,20,26,0.9));
+    border: 1px solid rgba(255,140,0,0.12);
+    border-radius: 14px;
+    padding: 32px;
+    max-width: 560px;
+    box-shadow: 0 10px 30px rgba(4,8,18,0.8), inset 0 1px 0 rgba(255,255,255,0.02);
 }
 
 .card h2 {
@@ -136,10 +136,12 @@ body {
 }
 
 .btn-primary {
-    background: var(--accent);
-    color: #000;
+    background: linear-gradient(90deg, #ffb347, #ff8c00);
+    color: #0a0a0a;
     width: 100%;
-    margin-top: 20px;
+    margin-top: 18px;
+    padding: 12px 18px;
+    border-radius: 10px;
 }
 
 .btn-primary:hover {
@@ -166,10 +168,10 @@ body {
 }
 
 .panel {
-    background: rgba(30, 30, 40, 0.9);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 20px;
+    background: linear-gradient(180deg, rgba(12,14,18,0.75), rgba(8,10,12,0.7));
+    border: 1px solid rgba(255,255,255,0.03);
+    border-radius: 12px;
+    padding: 18px;
     overflow-y: auto;
     max-height: 800px;
 }
@@ -191,11 +193,11 @@ body {
 
 /* Player Card */
 .player-card {
-    background: linear-gradient(135deg, rgba(255, 140, 0, 0.2), rgba(210, 105, 30, 0.2));
-    border: 1px solid var(--accent);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
+    background: linear-gradient(135deg, rgba(255,140,0,0.08), rgba(255,140,0,0.02));
+    border: 1px solid rgba(255,140,0,0.06);
+    padding: 14px;
+    border-radius: 10px;
+    margin-bottom: 14px;
     text-align: center;
 }
 
@@ -344,8 +346,13 @@ body {
 .world-canvas-wrap { display:flex; justify-content:center; align-items:center; padding:12px; }
 .map-cell { padding: 8px; text-align: center; border-radius:6px; background: #222; color: #fff; }
 
-/* Canvas styles */
-#world-canvas { width:100%; max-width:720px; height:auto; background: linear-gradient(#0f1720, #081018); border-radius:8px; box-shadow: 0 6px 18px rgba(0,0,0,0.6); }
+/* World canvas - modern 2D look */
+#world-canvas { width:100%; max-width:900px; height:auto; background: transparent; border-radius:12px; box-shadow: 0 18px 40px rgba(2,6,12,0.75); border: 1px solid rgba(255,255,255,0.02); }
+
+.world-canvas-wrap { position: relative; }
+.hud-overlay {
+    position: absolute; left: 12px; top: 12px; pointer-events: none;
+}
 
 /* Simple sprite animation */
 .player-sprite { transition: transform 0.15s linear; }
