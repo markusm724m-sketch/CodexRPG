@@ -23,6 +23,7 @@ let debugDrawPaths = false;
 let playerSprite = null;
 let npcSprite = null;
 let spritesLoaded = false;
+let particleSprite = null;
 // framesX = columns, framesY = rows (directions)
 let playerAnim = { counter: 0, speed: 8, framesX: 4, framesY: 4, dir: 0 };
 let npcAnim = { counter: 0, speed: 12, frames: 4 };
@@ -559,21 +560,37 @@ function spawnParticles(tileX, tileY, count) {
             vx: Math.cos(angle)*speed*0.4,
             vy: Math.sin(angle)*speed*0.4 - 1.0,
             life: 30 + Math.floor(Math.random()*20),
-            color: ['#ffd54f','#ff8a65','#a7ffeb'][Math.floor(Math.random()*3)]
+            color: ['#ffd54f','#ff8a65','#a7ffeb'][Math.floor(Math.random()*3)],
+            size: 4 + Math.random()*6,
+            rot: Math.random()*Math.PI*2
         });
     }
 }
 
 function drawParticles() {
     if (!ctx) return;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
     particles.forEach(p => {
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = Math.max(0, p.life/50);
-        ctx.beginPath();
-        ctx.arc(p.x - camera.x, p.y - camera.y, 3, 0, Math.PI*2);
-        ctx.fill();
+        const px = p.x - camera.x;
+        const py = p.y - camera.y;
+        const alpha = Math.max(0, p.life/50);
+        if (particleSprite && particleSprite.complete && particleSprite.naturalWidth) {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.translate(px, py);
+            ctx.rotate(p.rot);
+            const s = (p.size/16) * tileSize * 0.12;
+            ctx.drawImage(particleSprite, -s/2, -s/2, s, s);
+            ctx.restore();
+        } else {
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath(); ctx.arc(px, py, p.size, 0, Math.PI*2); ctx.fill();
+        }
         ctx.globalAlpha = 1.0;
     });
+    ctx.restore();
 }
 
 function drawNPCs() {
@@ -799,10 +816,16 @@ function pickNearbyTile(cx, cy, radius) {
 async function loadAssets() {
     // load player/npc sprite sheets if present
     try {
-            playerSprite = new Image();
-            playerSprite.src = '/static/sprites/player_dir.svg';
-            npcSprite = new Image();
-            npcSprite.src = '/static/sprites/npc_dir.svg';
+                // prefer PNG raster assets if present, fall back to SVG
+                playerSprite = new Image();
+                playerSprite.onerror = () => { playerSprite.src = '/static/sprites/player_dir.svg'; };
+                playerSprite.src = '/static/sprites/player_dir.png';
+                npcSprite = new Image();
+                npcSprite.onerror = () => { npcSprite.src = '/static/sprites/npc_dir.svg'; };
+                npcSprite.src = '/static/sprites/npc_dir.png';
+                particleSprite = new Image();
+                particleSprite.onerror = () => { particleSprite.src = '/static/sprites/particle.png'; };
+                particleSprite.src = '/static/sprites/particle.png';
         // try load audio click; if missing, decode generated WAV base64
         if (audioCtx) {
             try {
