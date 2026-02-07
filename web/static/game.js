@@ -355,6 +355,18 @@ function updateSimulation() {
         p.vy += 0.04; // gravity
         if (p.life <= 0) particles.splice(i,1);
     }
+
+    // simple NPC idle animation (bob/idle)
+    simulationTick = (simulationTick || 0) + 1;
+    npcs.forEach((n, idx) => {
+        if (typeof n._baseX === 'undefined') {
+            n._baseX = n.x; n._baseY = n.y; n._seed = idx * 0.7;
+        }
+        const t = (simulationTick / 30) + n._seed;
+        // small idle offset
+        n.x = n._baseX + Math.sin(t) * 0.08;
+        n.y = n._baseY + Math.cos(t * 1.3) * 0.06;
+    });
 }
 
 function onCanvasClick(ev) {
@@ -474,9 +486,9 @@ async function loadAssets() {
     // load player/npc sprite sheets if present
     try {
         playerSprite = new Image();
-        playerSprite.src = '/static/sprites/player.png';
+        playerSprite.src = '/static/sprites/player.svg';
         npcSprite = new Image();
-        npcSprite.src = '/static/sprites/npc.png';
+        npcSprite.src = '/static/sprites/npc.svg';
         // try load audio click
         if (audioCtx) {
             try {
@@ -487,6 +499,26 @@ async function loadAssets() {
                 }
             } catch (e) {
                 console.debug('No click.wav available or failed decode', e);
+            }
+            // if external file missing, generate a short click buffer programmatically
+            if (!audioBuffers.click) {
+                try {
+                    const sr = audioCtx.sampleRate;
+                    const dur = 0.08;
+                    const len = Math.floor(sr * dur);
+                    const buf = audioCtx.createBuffer(1, len, sr);
+                    const ch = buf.getChannelData(0);
+                    const freq = 1000;
+                    for (let i = 0; i < len; i++) {
+                        // fast decay sine
+                        const t = i / sr;
+                        const env = Math.exp(-12 * t);
+                        ch[i] = Math.sin(2 * Math.PI * freq * t) * env * 0.6;
+                    }
+                    audioBuffers.click = buf;
+                } catch (e) {
+                    console.debug('Failed to synth audio buffer', e);
+                }
             }
         }
     } catch (e) {
