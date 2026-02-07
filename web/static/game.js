@@ -356,16 +356,43 @@ function updateSimulation() {
         if (p.life <= 0) particles.splice(i,1);
     }
 
-    // simple NPC idle animation (bob/idle)
+    // NPC behaviour: follow path if present, otherwise idle and occasionally pick a patrol target
     simulationTick = (simulationTick || 0) + 1;
     npcs.forEach((n, idx) => {
         if (typeof n._baseX === 'undefined') {
             n._baseX = n.x; n._baseY = n.y; n._seed = idx * 0.7;
+            n._nextTargetTick = simulationTick + 80 + Math.floor(Math.random()*120);
+            n.path = null; n.pathIndex = 0;
         }
-        const t = (simulationTick / 30) + n._seed;
-        // small idle offset
-        n.x = n._baseX + Math.sin(t) * 0.08;
-        n.y = n._baseY + Math.cos(t * 1.3) * 0.06;
+
+        // If path exists, step along it
+        if (n.path && n.pathIndex < n.path.length) {
+            const target = n.path[n.pathIndex];
+            const dx = target.x - n.x;
+            const dy = target.y - n.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const speed = 0.03; // tiles per frame for NPC
+            if (dist < 0.06) {
+                n.x = target.x; n.y = target.y; n.pathIndex++;
+            } else {
+                n.x += (dx/dist) * speed;
+                n.y += (dy/dist) * speed;
+            }
+        } else {
+            // idle bobbing while waiting
+            const t = (simulationTick / 30) + n._seed;
+            n.x = n._baseX + Math.sin(t) * 0.02;
+            n.y = n._baseY + Math.cos(t * 1.3) * 0.02;
+            // pick a new patrol target occasionally
+            if (simulationTick >= n._nextTargetTick) {
+                n._nextTargetTick = simulationTick + 140 + Math.floor(Math.random()*180);
+                const target = pickNearbyTile(Math.round(n._baseX), Math.round(n._baseY), 3);
+                if (target) {
+                    const p = findPath({x: Math.round(n.x), y: Math.round(n.y)}, target);
+                    if (p && p.length > 0) { n.path = p; n.pathIndex = 0; }
+                }
+            }
+        }
     });
 
     // player animation state: moving if has target or non-zero velocity
@@ -567,6 +594,88 @@ function generateSineWavBase64(freq=440, duration=0.1, sampleRate=44100) {
         binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunk));
     }
     return btoa(binary);
+}
+
+// Simple A* pathfinding on tile grid (4-directional)
+function findPath(start, goal) {
+    if (!worldGrid) return null;
+    const rows = worldGrid.length; const cols = worldGrid[0].length;
+    function inBounds(p){ return p.x >=0 && p.x < cols && p.y >=0 && p.y < rows; }
+    function key(p){ return p.x + ',' + p.y; }
+
+    const open = new Map();
+    const closed = new Set();
+    const gScore = {};
+    const fScore = {};
+    const cameFrom = {};
+
+    const startKey = key(start); const goalKey = key(goal);
+    open.set(startKey, start);
+    gScore[startKey] = 0;
+    fScore[startKey] = heuristic(start, goal);
+
+    while (open.size > 0) {
+        // pick node in open with lowest fScore
+        let currentKey = null; let current = null; let bestF = Infinity;
+        for (const [k, v] of open.entries()) {
+            const f = fScore[k] || Infinity;
+            if (f < bestF) { bestF = f; currentKey = k; current = v; }
+        }
+        if (!current) break;
+        if (currentKey === goalKey) return reconstructPath(cameFrom, currentKey);
+
+        open.delete(currentKey);
+        closed.add(currentKey);
+
+        const neighbors = getNeighbors(current);
+        for (const nb of neighbors) {
+            const nk = key(nb);
+            if (closed.has(nk)) continue;
+            const tentativeG = (gScore[currentKey] || Infinity) + 1;
+            if (!open.has(nk) || tentativeG < (gScore[nk] || Infinity)) {
+                cameFrom[nk] = currentKey;
+                gScore[nk] = tentativeG;
+                fScore[nk] = tentativeG + heuristic(nb, goal);
+                open.set(nk, nb);
+            }
+        }
+    }
+    return null;
+
+    function reconstructPath(cameFrom, currentKey) {
+        const path = [];
+        while (currentKey) {
+            const [x,y] = currentKey.split(',').map(Number);
+            path.unshift({x, y});
+            currentKey = cameFrom[currentKey];
+        }
+        return path;
+    }
+
+    function getNeighbors(p) {
+        const offs = [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+        const out = [];
+        for (const o of offs) {
+            const np = { x: p.x + o.x, y: p.y + o.y };
+            if (!inBounds(np)) continue;
+            // treat all tiles as walkable for now; could add terrain checks
+            out.push(np);
+        }
+        return out;
+    }
+
+    function heuristic(a,b) { return Math.abs(a.x - b.x) + Math.abs(a.y - b.y); }
+}
+
+function pickNearbyTile(cx, cy, radius) {
+    if (!worldGrid) return null;
+    const rows = worldGrid.length; const cols = worldGrid[0].length;
+    for (let attempt=0; attempt<12; attempt++) {
+        const rx = Math.max(0, Math.min(cols-1, cx + Math.floor((Math.random()*2*radius)-radius)));
+        const ry = Math.max(0, Math.min(rows-1, cy + Math.floor((Math.random()*2*radius)-radius)));
+        return { x: rx, y: ry };
+    }
+    return { x: cx, y: cy };
 }
 
 async function loadAssets() {
