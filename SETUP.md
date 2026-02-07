@@ -44,7 +44,7 @@ python app.py
 ```
 
 **Open in browser:**
-- Navigate to `http://localhost:5000`
+- Navigate to `http://loltkfcalhost:5000`
 - Create character and play!
 
 **Troubleshooting:**
